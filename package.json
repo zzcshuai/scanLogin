@@ -1,0 +1,45 @@
+{
+  "name": "index",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "amfe-flexible": "^2.2.1",
+    "core-js": "^2.6.5",
+    "cube-ui": "~1.12.15",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^7.1.0",
+    "vue": "^2.6.10",
+    "vue-amap": "^0.5.9",
+    "vue-router": "^3.0.3",
+    "vuex": "^3.0.1",
+    "weixin-js-sdk": "^1.4.0-test"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.7.0",
+    "@vue/cli-plugin-eslint": "^3.7.0",
+    "@vue/cli-service": "^3.7.0",
+    "axios": "^0.18.0",
+    "babel-eslint": "^10.0.1",
+    "eslint-plugin-vue": "^5.0.0",
+    "less": "^3.0.4",
+    "less-loader": "^4.1.0",
+    "mint-ui": "^2.2.13",
+    "postcss-px2rem": "^0.3.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
+    "vue-cli-plugin-axios": "0.0.4",
+    "vue-cli-plugin-cube-ui": "^0.2.5",
+    "vue-template-compiler": "^2.5.21"
+  },
+  "transformModules": {
+    "cube-ui": {
+      "transform": "cube-ui/src/modules/${member}",
+      "kebabCase": true
+    }
+  }
+}
