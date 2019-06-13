@@ -60,10 +60,29 @@ export default {
 }
 </script>
 
-<style lang='less'>
+<style lang='less' scoped>
+body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, li, a, p, h1, h2, h3, h4,h5, h6, i, b, textarea, button, input, select, figure, figcaption {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      text-decoration: none;
+      border: none;
+      font-style: normal;
+      /* box-sizing: border-box; */
+      outline: none;
+      -webkit-tap-highlight-color:transparent;
+      -webkit-font-smoothing: antialiased;
+  }
+  input{
+    border:none;
+    outline: none;
+  }
+  button{
+    cursor: pointer;
+  }
 #model {
-    width: 65%;
-    height: 45%;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     background: #ffffff;

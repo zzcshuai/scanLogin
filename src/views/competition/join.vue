@@ -16,7 +16,7 @@
       </div>
       <i @click="back" class="back cubeic-back"></i>
     </header>
-    <div class="filter-time" v-if="apiUrl=='/api/Join/event'">
+    <div class="filter-time" v-if="activeTabName=='event'">
       <button
         :disabled="disabledFunPrev"
         class="cube-btn btn-inline btn-first"
@@ -39,14 +39,35 @@
         <i class="cubeic-arrow"></i>
       </button>
     </div>
-    <div class="event-value-filter">
+    <!--ai的头  -->
+        <div class="filter-time" v-if="activeTabName=='AI'">
+      <button
+        class="cube-btn btn-inline btn-first"
+        @click="daychange('prev')"
+      >
+        <i class="cubeic-back"></i>
+        前一天
+      </button>
+      <span class="center-filter" @click="showDatePicker">
+        <button class="cube-btn btn-inline">{{daydateTime}}</button> |
+        <i class="cubeic-calendar"></i> 
+      </span>
+      <button
+        class="cube-btn btn-inline btn-last"
+        @click="daychange('next')"
+      >
+        后一天
+        <i class="cubeic-arrow"></i>
+      </button>
+    </div>
+    <div class="event-value-filter" v-if="activeTabName!='AI'">
       <cube-scroll-nav-bar :current="currentEV" :labels="event_value" @change="eventTypeHandler"/>
     </div>
     <div
       class="tab-slide-container"
-      :class="{'tab-slide-container-sp':apiUrl=='/api/Join/training'}"
+      :class="{'tab-slide-container-sp':activeTabName=='training','tab-slide-container-AI':activeTabName=='AI'}"
     >
-      <cube-slide
+      <cube-slide 
         ref="slide"
         :loop="loop"
         :initial-index="initialIndex"
@@ -110,7 +131,8 @@
                 </div>
               </li>
             </ul>
-            <div class="no-more" v-if="!list.length">暂无更多</div>
+            <!-- <div class="no-more" v-if="!list.length">暂无更多</div> -->
+            <cube-loading v-if="!loadingFlag" class="loading-part" :size="40"></cube-loading>
           </cube-scroll>
         </cube-slide-item>
         <!-- 课程培训 -->
@@ -125,7 +147,7 @@
             <ul class="list-wrapper">
               <li
                 v-for="(item, index) in trainList"
-                class="list-item"
+                class="list-item "
                 @click="trainLink(item.train_id,item.guid)"
                 :key="index"
               >
@@ -165,12 +187,42 @@
                 </div>
               </li>
             </ul>
+            <cube-loading v-if="!loadingFlag" class="loading-part" :size="40"></cube-loading>
             <!-- <div class="no-more" v-if="!trainList.length">暂无更多</div> -->
           </cube-scroll>
         </cube-slide-item>
-        <!-- <cube-slide-item>
-          <cube-scroll>3</cube-scroll>
-        </cube-slide-item>-->
+        <cube-slide-item>
+          <cube-scroll
+           ref="trainScroll"
+            :data="listAI"
+            :options="scrollOptions"
+            @pulling-down="onPullingDown"
+            @pulling-up="onPullingUp">
+               <ul class="list-wrapper">
+                <li class="list-item liAI" v-for="item in listAI" :key="item.id" >
+                    <div class="listAI">
+                        <div class="body">
+                            <div class="time">
+                               <div>{{item.groupname}}</div>
+                               <div>{{item.address}}</div>
+                            </div>
+                            <div class="cost">
+                               ￥{{item.money}}
+                            </div>
+                        </div>
+                        <div class="bottom">
+                            <div>剩余可报名：{{item.prop}}人</div>
+                            <div @click="eventLink(item.eventid,item)" v-if="!signoff">报名</div>
+                        </div>
+                    </div>
+                </li>
+               </ul>
+                <ul class="list-wrapper" v-if="listAI.length<1">
+                  <li class="list-no">没有考级场次</li>
+                </ul>
+             <cube-loading v-if="!loadingFlag" class="loading-part" :size="40"></cube-loading>    
+          </cube-scroll>
+        </cube-slide-item>
       </cube-slide>
       <!-- <cube-drawer
           ref="drawer"
@@ -193,17 +245,18 @@
       @select="selectHandler"
     >
     </cube-drawer>-->
-    <el-amap vid="amap" :plugin="plugin" class="amap-demo" :center="center"></el-amap>
-    <!-- <div class="amap-demo"></div> -->
+    <!-- <el-amap vid="amap" :plugin="plugin" class="amap-demo" :center="center"></el-amap> -->
+    <div id="amap" class="amap-demo"></div>
   </div>
 </template>
 <script>
 import CommonBottom from "@/components/common-bottom.vue";
 
 import { findIndex } from "../../common/util";
-import wxShare from '../../common/wx-share'
-// import MapLoader  from '../../common/amap'
-// import { provinceList, cityList, areaList } from "../../common/area";
+import { signUpList, trainingList,ailist,HotCity } from "../../common/api";
+import wxShare from "../../common/wx-share";
+import MapLoader  from '../../common/amap'
+import { provinceList, cityList, areaList } from "../../common/area";
 
 export default {
   name: "join",
@@ -215,7 +268,9 @@ export default {
         eventType: "",
         province: "",
         city: "",
-        date: ""
+        area:"",
+        date: "",       //2019-06
+        daydate:"",    //2019-06-05
       },
       pageSize: 20,
       currentPage: 1,
@@ -242,8 +297,8 @@ export default {
       },
       tabLabel: [
         { label: "赛事报名" },
-        { label: "培训报名" }
-        // { label: "AI考级" }
+        { label: "培训报名" },
+         { label: "AI考级" }
       ],
       province: "全国",
       // big
@@ -278,7 +333,7 @@ export default {
       total: 0,
       list: [],
       trainList: [],
-      apiUrl: "/api/Join/event",
+      activeTabName: "event",
       totalPage: 0,
       center: [121.59996, 31.197646],
       plugin: [
@@ -302,15 +357,15 @@ export default {
                     .then(res => {
                       const _data = res.data;
                       if (_data.status == 1) {
-                        // _$that.province=_data.regeocode.addressComponent.province;
-                        // _$that.key.province=_data.regeocode.addressComponent.province;
-                        // _$that.getList()
-                      } else {
-                        console.log(_data.info);
+                        _$that.province=_data.regeocode.addressComponent.province;
+                        _$that.key.province=_data.regeocode.addressComponent.province;                        
                       }
+                      console.log( _$that.key.province) 
+                      _$that.getList(true)                      
                     });
                   // this.$nextTick();
                 } else {
+                  _$that.getList(true) 
                   switch (result.info) {
                     case "NOT_SUPPORTED":
                       alert("定位失败,当前浏览器不支持定位功能");
@@ -342,14 +397,31 @@ export default {
         }
       ],
       loading: true,
+      loadingFlag:false,
       calcNum: 1,
-      currentEV: "全部"
+      currentEV: "全部",
+      addressData:[],    //省的数组
+      addressall:[],     //省市区
+      listAI:[],
+      currentEV: "全部",
+      map:null,
     };
   },
   components: {
     CommonBottom
   },
   computed: {
+    signoff(){
+      let date=new Date(this.key.daydate)
+      let newdate=new Date()
+      if(date.getMonth()==newdate.getMonth() && date.getDate()==newdate.getDate()){
+     
+        return true
+      }else{
+      
+        return false
+      }
+    },
     initialIndex() {
       let index = 0;
       index = findIndex(this.tabLabel, item => item.label === this.selectLabel);
@@ -358,6 +430,10 @@ export default {
     filterTime() {
       let arr = this.key.date.split("-");
       return this.key.date ? `${arr[0]}年${parseInt(arr[1])}月` : "";
+    },
+    daydateTime(){
+      let arr = this.key.daydate.split("-");
+      return this.key.daydate ? `${arr[0]}年${parseInt(arr[1])}月${parseInt(arr[2])}日` : "";
     },
     disabledFunPrev() {
       let time = new Date(this.key.date);
@@ -376,18 +452,31 @@ export default {
       );
     }
   },
+  watch:{
+    activeTabName:function(){
+       console.log(this.addressall,this.addressData)
+      if(this.activeTabName=="AI"){
+         this.addressPicker.setData(this.addressall)
+      }else{
+        this.addressPicker.setData(this.addressData)
+      }
+     
+    }
+  },
   methods: {
     changePage(current) {
       switch (parseInt(current)) {
         case 0:
-          this.apiUrl = "/api/Join/event";
+          this.activeTabName = "event";
           this.reset(true);
           break;
         case 1:
-          this.apiUrl = "/api/Join/training";
+          this.activeTabName = "training";
           this.reset(true);
           break;
         case 2:
+          this.activeTabName = "AI";
+          this.reset(true);
           break;
       }
       this.selectLabel = this.tabLabel[current].label;
@@ -408,25 +497,31 @@ export default {
       });
       this.currentPage = 1;
       this.getList();
+      
     },
     formatData() {
-      // const addressData = this.areaFront
-      // addressData.forEach(country => {
-      //   country.children = country.value=="01"?provinceList:[]
-      //   country.children.forEach(province => {
-      //     province.children = cityList[province.value]
+      // const addressall = this.areaFront
+      // addressall.forEach(province => {
+      //   province.children = cityList[province.value]
+      //   province.children.forEach(city => {
+      //     city.children = areaList[city.value]
       //   })
       // })
+      // this.addressall=addressall
       // const addressData = provinceList;
-      let addressData=[]
-      this.axios({
-        url: `${this.$store.state.BASE_URI}api.yunbisai.com/request/hot/HotCity`,
-        // url: `/apis/request/hot/HotCity`,
-        methods: "get"
-      }).then(res =>{
+      let addressData = [];
+      // HotCity()
+      // this.axios({
+      //   url: `${
+      //     this.$store.state.BASE_URI
+      //   }api.yunbisai.com/request/hot/HotCity`,
+      //   // url: `/apis/request/hot/HotCity`,
+      //   methods: "get"
+      // })
+      HotCity().then(res => {
         let data = res.data;
         if (data.error == 0) {
-          data.datArr.forEach((e, i)=> {
+          data.datArr.forEach((e, i) => {
             if (
               e.area_num != "81" &&
               e.area_num != "71" &&
@@ -438,13 +533,15 @@ export default {
               });
             }
           });
-          addressData.unshift({ text: "全国", value: "86" });
+          this.addressData=addressData
+        }
+        addressData.unshift({ text: "全国", value: "86" });
           this.addressPicker = this.$createCascadePicker({
             title: "位置选择",
             data: addressData,
             onSelect: this.locationFun
           });
-        }
+        this.formatDataALL()
       });
       // addressData.unshift({ text: "全国", value: "86" });
       // cityList["86"] = [
@@ -454,19 +551,37 @@ export default {
       //   province.children = cityList[province.value];
       // });
     },
+    formatDataALL(){
+        var addressDataday = provinceList
+              addressDataday.forEach(province => {
+                province.children = cityList[province.value]
+                province.children.forEach(city => {
+                  city.children = areaList[city.value]
+                })
+          })
+           this.addressall=addressDataday
+           
+    },
     locateSelect() {
       // this.$refs.drawer.show();  //抽屉
       this.addressPicker.show();
     },
     locationFun(selectedVal, selectedIndex, selectedText) {
       // console.log(selectedVal,selectedIndex,selectedText)
-      this.province = `${selectedText[0]}`;
-      this.key.province = this.province;
+      if( this.activeTabName=="AI"){
+        this.province =`${selectedText[1]}`
+        this.key.city=`${selectedText[1]}`
+        this.key.area=`${selectedText[2]}`
+      }else{
+        this.province =`${selectedText[0]}`;
+      }
+      this.key.province = `${selectedText[0]}`;
       //this.key.city = selectedVal[0]!='86'?areaList[selectedVal[1]][0].city:''; //selectedText[2]
       this.currentPage = 1;
       this.$refs.trainScroll.scrollTo(0, 0, 200);
       this.$refs.trainScroll.forceUpdate();
       this.getList();
+      
     },
     changeHandler(index, item, selectedVal, selectedIndex, selectedText) {
       // fake request
@@ -508,21 +623,27 @@ export default {
       this.getList();
     },
     showDatePicker() {
+      this.datePicker="";
+      let date=new Date()
       if (!this.datePicker) {
         this.datePicker = this.$createDatePicker({
           title: "选择日期",
-          min: new Date(),
-          max: new Date(this.max),
-          value: new Date(),
-          columnCount: 2,
+          min: date,
+          max: this.max?new Date(this.max):new Date(`${date.getFullYear()+1}-${date.getMonth()+1}-${date.getDate()}`),
+          value: date,
+          columnCount: this.activeTabName=="AI"?3:2,
           onSelect: this.selectDate
         });
       }
       this.datePicker.show();
     },
     selectDate(date, selectedVal, selectedText) {
-      // console.log({date,selectedVal,selectedText})
-      this.key.date = `${selectedVal[0]}-${this.addZero(selectedVal[1])}`;
+    
+      if(this.activeTabName=='AI'){
+        this.key.daydate=`${selectedVal[0]}-${this.addZero(selectedVal[1])}-${this.addZero(selectedVal[2])}`
+      }else{
+        this.key.date = `${selectedVal[0]}-${this.addZero(selectedVal[1])}`;
+      }
       this.getList();
     },
     eventTypeFun(item) {
@@ -546,45 +667,51 @@ export default {
       this.$refs.trainScroll.forceUpdate();
       this.getList();
     },
-    eventLink(event_id) {
+    eventLink(event_id,obj) {
+       console.log(event_id,obj)
+       if(this.activeTabName=='AI'){
+        sessionStorage.setItem('groupai',obj.groupname);
+         sessionStorage.setItem('event_groupai',obj.event_group_id);
+      }
       window.open("/signUp?eventid=" + event_id);
+     
+       
     },
     trainLink(train_id, guid) {
       window.open(`/signUp/course?trainid=${train_id}&guid=${guid}`);
     },
     reset(flag) {
-      this.key = {
-        eventType: "",
-        province: "",
-        city: "",
-        date: this.nowYearMonth()
-      };
+      // this.key = {
+      //   eventType: "",
+      //   province: "",
+      //   city: "",
+      //   date: this.nowYearMonth(),
+      //   daydate:this.nowYearMonthday()
+      // };
+      this.key.date=this.nowYearMonth();
+      this.key.daydate=this.nowYearMonthday()
       this.calcNum = 1;
       this.actions[0].text = `<i class="cubeic-tag"></i>  全部类型`;
-      this.province = "全国";
+      // this.province = "全国";
       this.getList(flag);
+      
     },
     getList(flag) {
-      this.axios({
-        url: `${this.$store.state.BASE_URI}open.yunbisai.com${this.apiUrl}`,
-        methods: "get",
-        params: {
-          province_name: this.key.province == "全国" ? "" : this.key.province,
-          city_name: this.key.city,
-          event_value: this.key.eventType,
-          date: this.key.date,
-          pagesize: this.apiUrl == "/api/Join/training" ? this.pageSize : "",
-          page: this.apiUrl == "/api/Join/training" ? this.currentPage : ""
-        }
-      }).then(
-        res => {
+      this.loadingFlag=false;
+      let params={
+        province_name: this.key.province == "全国" ? "" : this.key.province,
+        city_name: this.key.city,
+        event_value: this.key.eventType,
+        date: this.key.date,
+        pagesize: this.activeTabName == "training" ? this.pageSize : "",
+        page: this.activeTabName == "training" ? this.currentPage : ""
+      }
+      if(this.activeTabName=="event"){
+        signUpList(params).then(res=>{
           let data = res.data;
-          this.list = [];
-          // this.loading=true;
-          this.currentPage == 1 ? (this.trainList = []) : 0;
-          if (data.error == 0 && data.datArr.rows) {
-            data.datArr.rows.forEach((e, i) => {
-              if (this.apiUrl == "/api/Join/event") {
+            this.list = [];
+            if (data.error == 0 && data.datArr.rows) {
+              data.datArr.rows.forEach((e, i) => {
                 this.list.push({
                   cname: e.lswlorganization__cname
                     ? e.lswlorganization__cname
@@ -610,8 +737,37 @@ export default {
                   ai_state: parseInt(e.ai_state),
                   num: e.pay_num ? e.pay_num : 0
                 });
-                this.max = data.datArr.max;
-              } else {
+                this.max = data.datArr.max;  
+              });
+              this.total = data.datArr.total;
+              this.totalPage = data.datArr.totalpage;
+            } else if (
+              data.error == 0 &&
+              data.datArr.total === 0 &&
+              flag &&
+              this.calcNum < 4
+            ) {
+              this.calcNum++;
+              this.max = data.datArr.max;  
+              this.monthChange("next", true);
+            } else {
+              this.$refs.trainScroll.forceUpdate();
+              this.total = 0;
+            }
+            this.$nextTick(() => {
+              this.loading = true;
+              this.loadingFlag=true;
+            });
+        },res=>{
+          this.loading = true;
+          this.loadingFlag=true;
+        })
+      }else if(this.activeTabName=='training'){
+         trainingList(params).then(res=>{
+            let data = res.data;
+            this.currentPage == 1 ? (this.trainList = []) : 0;
+            if (data.error == 0 && data.datArr.rows) {
+              data.datArr.rows.forEach((e, i) => {              
                 this.trainList.push({
                   cname: e.cname ? e.cname : "",
                   city: "",
@@ -627,32 +783,78 @@ export default {
                   train_id: e.training_id,
                   guid: e.training_guid,
                   num: e.pnum ? e.pnum : 0
-                });
-              }
-            });
+                });              
+              });
 
-            this.total = data.datArr.total;
-            this.totalPage = data.datArr.totalpage;
-          } else if (
-            data.error == 0 &&
-            data.datArr.total === 0 &&
-            flag &&
-            this.calcNum < 4
-          ) {
-            this.calcNum++;
-            this.monthChange("next", true);
-          } else {
-            this.$refs.trainScroll.forceUpdate();
-            this.total = 0;
-          }
-          this.$nextTick(() => {
+              this.total = data.datArr.total;
+              this.totalPage = data.datArr.totalpage;
+            } else if (
+              data.error == 0 &&
+              data.datArr.total === 0 &&
+              flag &&
+              this.calcNum < 4
+            ) {
+              this.calcNum++;
+              this.monthChange("next", true);
+            } else {
+              this.$refs.trainScroll.forceUpdate();
+              this.total = 0;
+            }
+            this.$nextTick(() => {
+              this.loading = true;
+              this.loadingFlag=true;
+            });
+        },res => {
             this.loading = true;
-          });
-        },
-        res => {
-          this.loading = true;
-        }
-      );
+            this.loadingFlag=true;
+        })
+      }else if(this.activeTabName=='AI'){
+        this.loadingFlag=false;
+          let data={
+            // province_id:"",
+            province_id: this.key.province == '全国' ? '' : this.key.province,
+            city_id: this.key.city,
+            county_id: this.key.area,
+            date: this.key.daydate,
+            limit: this.pageSize,
+            page: this.currentPage,
+          }
+          ailist(data).then(res=>{
+             let data = res.data;
+                this.currentPage == 1 ? (this.listAI = []) : 0;
+                if (data.errcode == 0) {
+                   var obj={},arr=[]
+                   for(var item of data.data){
+                      obj={
+                        money:item.cost!=".00"?Math.floor(parseFloat(item.cost)):0,
+                        timeq:item.begintime.slice(11,16),
+                        timeh:item.endtime.slice(11,16),
+                        name:item.org_name,
+                        address:item.province_name+item.city_name+item.county_name+item.address,
+                        prop:item.cvalue-item.num,
+                        eventid:item.event_id,
+                        is_ms:item.is_ms,  
+                        groupname:item.groupname,
+                        event_group_id:item.event_group_id,
+                      }
+                      arr.push(obj)
+                   }
+                    this.listAI=arr
+                   
+                }else{
+
+                }
+                 this.$nextTick(() => {
+                  this.loading = true;
+                  this.loadingFlag=true;
+            });
+            },res => {
+            this.loading = true;
+            this.loadingFlag=true;
+            }
+          )
+          
+      }           
     },
     timeFor(btime, etime) {
       let time = "";
@@ -719,6 +921,26 @@ export default {
       ];
       return now.getFullYear() + "-" + arr[now.getMonth()];
     },
+    nowYearMonthday() {
+      let now = new Date();
+      let arr = [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12"
+      ];
+      let day=now.getDate()
+      if(day<10)day="0"+day
+      return now.getFullYear() + "-" + arr[now.getMonth()]+"-"+day;
+    },
     addZero(num) {
       return num.toString().length == 1 ? "0" + num : num;
     },
@@ -744,6 +966,25 @@ export default {
       this.loading = false;
       this.getList(flag);
     },
+    
+    daychange(type, flag){
+      if (!this.loading) {
+        return;
+      }
+      var date=new Date(this.key.daydate)
+      
+      switch (type) {
+        case "prev":
+           date.setDate(date.getDate() - 1)
+          break;
+        case "next":
+           date.setDate(date.getDate() + 1)
+          break;
+      }
+      if(date<=new Date())return
+      this.key.daydate=`${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
+      this.getList()
+    },
     onPullingDown() {
       this.currentPage = 1;
       this.getList();
@@ -757,61 +998,66 @@ export default {
       }
     },
     locationOfAmap() {
-      MapLoader().then(AMap => {
-        console.log('地图加载成功')
-        this.map = new AMap.Map('amap-demo', {
-          center: [117.000923, 36.675807],
-        })
-        this.map.plugin('AMap.Geolocation', function() {
-            geolocation = new AMap.Geolocation();
+      MapLoader().then(
+        AMap => {
+          console.log("地图加载成功");
+          this.map = new AMap.Map("amap", {
+            resizeEnable: true
+          });
+          this.map.plugin("AMap.Geolocation", ()=> {            
+            let geolocation = new AMap.Geolocation();
             geolocation.getCurrentPosition();
-            AMap.event.addListener(geolocation, 'complete', (result)=>{
+            AMap.event.addListener(geolocation, "complete", result => {
+              // console.log(result)
               this.axios({
                 url: "//restapi.amap.com/v3/geocode/regeo",
                 methods: "get",
                 params: {
                   key: "a4b7b21b2da76b28d65c4126194c1e3c",
-                  location:
-                    result.position.lng + "," + result.position.lat
+                  location: result.position.lng + "," + result.position.lat
                 }
               }).then(res => {
                 const _data = res.data;
-                // _$that.province=_data.regeocode.addressComponent.province;
-                // _$that.key.province=_data.regeocode.addressComponent.province;
-                // _$that.getList()
-                
+                if(_data.status==1){                  
+                  this.province=_data.regeocode.addressComponent.province;
+                  this.key.province=_data.regeocode.addressComponent.province;
+                }
+                this.getList(true)
               });
             });
-            AMap.event.addListener(geolocation, 'error', (error)=>{
-              switch(error.info) {
+            AMap.event.addListener(geolocation, "error", error => {
+              this.getList(true)
+              switch (error.info) {
                 case "NOT_SUPPORTED":
-                    alert("定位失败,当前浏览器不支持定位功能");
-                    break;
+                  alert("定位失败,当前浏览器不支持定位功能");
+                  break;
                 case "FAILED":
-                    switch(error.message){
-                        case 'Get ipLocation failed.':
-                            alert('IP精确定位失败');
-                            break;
-                        case "Get geolocation failed.Get ipLocation failed.":
-                            alert("IP精确定位失败");
-                            break;
-                        case 'Browser not Support html5 geolocation.':
-                            alert('定位失败,浏览器版本较低');
-                            break;
-                        case 'Geolocation permission denied.':
-                            alert('定位失败,用户禁用了定位权限');
-                            break;
-                        case 'Get geolocation time out.':
-                            alert('定位失败,请求超时');
-                            break;
-                    }
-                    break;
+                  switch (error.message) {
+                    case "Get ipLocation failed.":
+                      alert("IP精确定位失败");
+                      break;
+                    case "Get geolocation failed.Get ipLocation failed.":
+                      alert("IP精确定位失败");
+                      break;
+                    case "Browser not Support html5 geolocation.":
+                      alert("定位失败,浏览器版本较低");
+                      break;
+                    case "Geolocation permission denied.":
+                      alert("定位失败,用户禁用了定位权限");
+                      break;
+                    case "Get geolocation time out.":
+                      alert("定位失败,请求超时");
+                      break;
+                  }
+                  break;
               }
-            });      
-        })
-      }, e => {
-        console.log('地图加载失败' ,e)
-      })
+            });
+          });
+        },e => {
+          this.getList(true)
+          console.log("地图加载失败", e);
+        }
+      );
     },
     popValue() {
       this.$createDialog(
@@ -954,12 +1200,13 @@ export default {
       title: "报名入口",
       desc: "线上报名 一键搞定",
       img: ""
-    });    
+    });
     // this.locationOfAmap()
     this.formatData();
     this.key.date = this.nowYearMonth();
-    // this.locationOfAmap();
-    this.getList(true);
+    this.locationOfAmap();
+    // this.getList(true);
+
   }
 };
 </script>
@@ -967,7 +1214,7 @@ export default {
 #join {
   height: 100%;
   position: relative;
-  background: #EAF2F5;
+  background: #eaf2f5;
   .clearfix:after,
   .clearfix:before {
     clear: both;
@@ -993,7 +1240,7 @@ export default {
   .event-value-filter {
     height: 40px;
     line-height: 40px;
-    .cube-scroll-content{      
+    .cube-scroll-content {
       border-bottom: 1px solid #ddd;
     }
     .cube-scroll-nav-bar-item {
@@ -1048,7 +1295,7 @@ export default {
     font-size: 14px;
     font-weight: 700;
     .cube-tab-bar {
-      width: 60%;
+      width: 70%;
       float: right;
       .cube-tab_active {
         color: #3b8be2;
@@ -1096,14 +1343,32 @@ export default {
       margin-top: 20px;
       color: #666;
     }
+    .loading-part{
+      position: absolute;
+      top:150px;
+      left: 0;
+      right: 0;
+      span{
+        margin: 0 auto;
+      }
+    }
     .list-wrapper {
       overflow: hidden;
-      li:first-child{        
-        margin-top: 2px;
+      .list-no{
+        text-align: center;
+        font-size: 20px;
+
+      }
+      li:first-child {
+        margin-top: 10px;
+      }
+      .liAI{
+        margin-top: 10px;
       }
       li {
         padding: 0px 10px;
-        margin-top: 5px;
+        padding-top: 5px;
+        margin-top: 20px;
         text-align: left;
         background-color: white;
         font-size: 14px;
@@ -1197,6 +1462,7 @@ export default {
           padding: 15px 0;
           justify-content: space-between;
           align-items: center;
+          height: 40px;
           // border-bottom: 1px solid #ddd;
           .front {
             display: flex;
@@ -1210,10 +1476,46 @@ export default {
           }
         }
       }
+      .listAI{
+        height: 100px;
+        padding-bottom: 10px;
+        .body{
+          margin:0 10px;
+          padding: 10px;
+          display: flex;
+          font-size: 20px;
+          border-bottom: 1px solid #ccc;
+          color: #333;
+          justify-content: space-between;
+          .time>div:nth-child(2){
+            margin-top:5px; 
+            font-size: 15px;
+          }
+        }
+        .bottom{
+          padding: 0 10px;
+          div:nth-child(1){
+               margin: 5px;
+               padding: 5px 20px;
+          }
+          div:nth-child(2){
+            margin: 5px;
+            font-size: 15px;
+            padding: 5px 20px;
+            border:1px solid #ccc;
+            border-radius: 5px;
+            background: #06c;
+            color: #fff;
+          }
+        }
+      }
     }
   }
   .tab-slide-container-sp {
     top: 90px;
+  }
+  .tab-slide-container-AI {
+    top: 95px;
   }
   .cube-toolbar {
     bottom: 0;

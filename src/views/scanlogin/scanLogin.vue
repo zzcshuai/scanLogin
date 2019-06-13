@@ -15,11 +15,12 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* @import url('../../style/base.css'); */
 #scanlogin{
   width: 100%;
   height: 100%;
   text-align: left;
-}
+  }
+
 </style>

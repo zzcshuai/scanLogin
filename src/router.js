@@ -5,8 +5,6 @@ import join from './views/competition/join.vue'
 import scanLogin from './views/scanlogin/scanLogin.vue';
 import beginScan from './views/scanlogin/beginScan.vue';
 import checkingCaller from './views/scanlogin/checkingCaller.vue';
-import inputCode from './views/scanlogin/inputCode.vue';
-import login  from './views/scanlogin/login.vue';
 import memberList from './views/scanlogin/memberList.vue';
 Vue.use(Router)
 
@@ -35,19 +33,17 @@ export default new Router({
       component:scanLogin,
       children:[
         {
+          path:'playerDetail',
+          component:resolve=>require(['./components/playerDetail.vue'],resolve)
+        },
+        {   //检录员验证
           path:'checkingCaller',component:checkingCaller
         },
-        {
-          path:'login',component:login
-        },
-        {
+        {   //开始扫码
           path:'beginScan',component:beginScan
         },
-        {
+        {   //小组成员
           path:'memberList',component:memberList
-        },
-        {
-          path:'inputCode',component:inputCode
         }
       ]
     },
