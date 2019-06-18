@@ -9,7 +9,7 @@ if (host.includes('dev')) {
 } else if (host.includes('test')) {
   baseURL = '//test-'
 }else if(host.includes('localhost')){
-  baseURL = '//dev-'
+  baseURL = '//test-'
 }else if(host.includes('192.168.2')){
   baseURL = '//dev-'
 }else if(host.includes('127.0.0.1')){
@@ -54,3 +54,11 @@ export const checkGroupIdPlayer=params =>request('get',`${baseURL}${OPEN}/api/Ro
 export const groupIDGetPlayer=params =>request('get',`${baseURL}${OPEN}/api/RollCall/getPlayerGroupList`,params)
 //获取所有小组
 export const getGroupList=params =>request('get',`${baseURL}${OPEN}/api/RollCall/getGroupList`,params)
+//获取赛事信息
+export const getEventDetail=params=>request('get',`${baseURL}${OPEN}/api/RollCall/getEventDetail`,params)
+//推送验证检录员地址(二维码)
+export const getQRCode=params=>request('get',`https://m.yunbisai.com/wechat/Qrcode/temporary`,params)
+//获取微信配置参数
+export const getWXconfig=params=>request('get',`https://m.yunbisai.com/wechat/jssdk`,params)
+//传递code得到openid
+export const codeGetOpenid=params=>request('get',`https://m.yunbisai.com/wechat/Openid/getUserInfo`,params)

@@ -26,15 +26,14 @@
       </button>
     </div>
   </div>
-  <!-- <cube-button @click="showToastType">Toast - type</cube-button> -->
 </div>
 </template>
 
 <script>
 import { Toast } from 'vant';
 import {setCookie,getCookie} from '../../common/cookies';
-import {wxGetOpenID} from '../../common/wx-getOpenID';
-import {checkSubmit} from '../../common/api'
+import {checkSubmit,getWXconfig,codeGetOpenid} from '../../common/api'
+import wx from 'weixin-js-sdk';
 export default {
   name: 'checkingCaller',
   data() {
@@ -47,25 +46,79 @@ export default {
     }
   },
   created() {
-    //do something after creating vue instance
     let _this=this;
-    // console.log(2)
     let eventID=_this.$route.query.event_id;
     if(eventID!=null&&eventID!=''){
       _this.event_id=eventID;
-    }else{
-      _this.event_id=4368
     }
   },
   beforeRouteEnter(to, from, next) {
-    let openid=getCookie('openid')
-    //如果没有openid，直接微信获取
-    if(!openid){
-      wxGetOpenID()
-    }
-    next()
+    next(_this=>{
+      let openid=getCookie('openid')
+      //如果没有openid，直接微信获取
+      if(!openid){
+      //获取code
+        if(_this.isWeixin){
+          let code=_this.getUrlKey('code');
+          if(code){
+            let data={
+              code:code
+            }
+            codeGetOpenid(data).then((res)=>{
+              if(res.data.error==0){
+                openid=res.data.datArr.openid;
+                setCookie('openid',openid)
+                window.location.replace('/scanLogin/checkingCaller?event_id='+_this.event_id)
+              }else{
+                Toast.fail(res.data.msg);
+                window.location.replace('/scanLogin/checkingCaller?event_id='+_this.event_id)
+              }
+            })
+          }else{
+            _this.getCodeApi('wx')
+          }
+        }else{
+          Toast.fail('请在微信客户端打开')
+        } 
+      }
+    })
   },
   methods: {
+    //获取url参数
+    getUrlKey(name){   
+       return decodeURIComponent((new RegExp('[?|&]'+name+'='+'([^&;]+?)(&|#|;|$)').exec(location.href)||[,""])[1].replace(/\+/g,'%20'))||null;
+    },
+    
+    getCodeApi(state){
+      let data={
+        url:location.href
+      }
+      getWXconfig(data).then((res)=>{
+        let Data = res.data;
+        let appId=Data.appId
+        // config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作
+          wx.config({
+            debug: false, // 开启调试模式,开发时可以开启
+            appId: Data.appId,   // 必填，公众号的唯一标识   由接口返回
+            timestamp: Data.timestamp, // 必填，生成签名的时间戳 由接口返回
+            nonceStr: Data.nonceStr,    // 必填，生成签名的随机串 由接口返回
+            signature: Data.signature,   // 必填，签名 由接口返回
+            jsApiList: [] // 此处填你所用到的方法
+        });
+        let urlNow=encodeURIComponent(window.location.href);
+        let scope='snsapi_base';    //snsapi_userinfo   //静默授权 用户无感知
+        let url="http://m.yunbisai.com/wechat/Openid?url="+urlNow;
+        window.location.replace(url);
+      })    
+    },
+    isWeixin(){
+      const ua = window.navigator.userAgent.toLowerCase();
+      if(ua.match(/MicroMessenger/i) == 'micromessenger'){
+        return true;
+      } else {
+        return false;
+      }
+    },
     checkName(isName){
       let _this=this;
       if(_this.txtUserName!=''){
@@ -116,7 +169,7 @@ export default {
         return;
       }
       if(_this.checkSubmit(true)){
-        console.log(txtUserName,txtPhone);
+        // console.log(txtUserName,txtPhone);
         let data={
           openid:openid,
           name:txtUserName,
@@ -125,7 +178,7 @@ export default {
         }
         checkSubmit(data).then((res)=>{
           if(res.data.error==0){
-              _this.$router.push('/scanLogin/beginScan?openid='+openid+'&event_id='+_this.event_id);
+              _this.$router.push('/scanLogin/beginScan?event_id='+_this.event_id);
               setCookie('ssid',res.data.test)
             }else{
               Toast.fail(res.data.msg)
@@ -206,47 +259,50 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
             font-size: 14px;
             color: #333333;
             li {
-                margin-top: 15px;
-                border-bottom: 1px solid #cccccc;
-                padding: 8px 0;
-                .nameLeft{
-                  margin-left: 9px;
-                }
-                input {
-                    margin-left: 0;
-                    font-size: 14px;
-                }
-                input::-webkit-input-placeholder {
-                    padding-left: 50px;
-                    font-size: 14px;
-                }
-                input:-moz-placeholder {
-                    /* Mozilla Firefox 4 to 18 */
-                    padding-left: 50px;
-                    font-size: 14px;
-                }
-                input::-moz-placeholder {
-                    /* Mozilla Firefox 19+ */
-                    padding-left: 50px;
-                    font-size: 14px;
-                }
-                :-ms-input-placeholder {
-                    /* Internet Explorer 10-11 */
-                    padding-left: 50px;
-                    font-size: 14px;
-                }
-                select {
-                    font-size: 14px;
-                }
+              margin-top: 15px;
+              border-bottom: 1px solid #cccccc;
+              padding: 8px 0;
+              .nameLeft{
+                margin-left: 9px;
+              }
+              input {
+                margin-left: 0;
+                font-size: 14px;
+              }
+              input::-webkit-input-placeholder {
+                padding-left: 50px;
+                font-size: 14px;
+              }
+              input:-moz-placeholder {
+                /* Mozilla Firefox 4 to 18 */
+                padding-left: 50px;
+                font-size: 14px;
+              }
+              input::-moz-placeholder {
+                /* Mozilla Firefox 19+ */
+                padding-left: 50px;
+                font-size: 14px;
+              }
+              :-ms-input-placeholder {
+                /* Internet Explorer 10-11 */
+                padding-left: 50px;
+                font-size: 14px;
+              }
+              select {
+                font-size: 14px;
+                -webkit-appearance:none;
+                background-color:transparent; 
+                border-color:transparent;
+              }
             }
             li:first-child input {
-                margin-left: 10px;
+              margin-left: 10px;
             }
             li:last-child input::-webkit-input-placeholder {
-                // padding-left: 2.3rem;
+              // padding-left: 2.3rem;
             }
             li:last-child input {
-                margin-left: 4px;
+              margin-left: 4px;
             }
         }
         .btnlogin {

@@ -4,25 +4,26 @@ import './cube-ui'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-// import axios from 'axios'
+import fastClick from 'fastclick';   
 import 'amfe-flexible'
+import Vant from 'vant';
+import 'vant/lib/index.css';
+import VueLazyLoad from 'vue-lazyload'
+import vueWechatTitle from 'vue-wechat-title'
 // import VueAMap from 'vue-amap';
 
 //解决移动端点击300ms延迟
-import fastClick from 'fastclick';
 fastClick.attach(document.body);
 
-import Vant from 'vant';
-import 'vant/lib/index.css';
+//添加动态组件标题
+Vue.use(vueWechatTitle)
 
-import VueLazyLoad from 'vue-lazyload'
+//图片懒加载
 Vue.use(VueLazyLoad,{
-    error:'//g.yunbisai.com/img/org/logo_t.png',
-    loading:'./assets/img/Loading.png'
+    error:'//g.yunbisai.com/img/cert/demo.png',
 })
 
 Vue.config.productionTip = false
-Vue.prototype.defaultImgUrl='//dev-g.yunbisai.com/';
 // Vue.prototype.$ajax = axios
 // axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 

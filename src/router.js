@@ -1,52 +1,70 @@
-import Vue from 'vue'
-import Router from 'vue-router'
-import competition from './views/competition/competition.vue'
-import join from './views/competition/join.vue'
-import scanLogin from './views/scanlogin/scanLogin.vue';
-import beginScan from './views/scanlogin/beginScan.vue';
-import checkingCaller from './views/scanlogin/checkingCaller.vue';
-import memberList from './views/scanlogin/memberList.vue';
-Vue.use(Router)
+import Vue from "vue";
+import Router from "vue-router";
+import competition from "./views/competition/competition.vue";
+import join from "./views/competition/join.vue";
+import scanLogin from "./views/scanlogin/scanLogin.vue";
+import beginScan from "./views/scanlogin/beginScan.vue";
+import checkingCaller from "./views/scanlogin/checkingCaller.vue";
+import memberList from "./views/scanlogin/memberList.vue";
+import shareCaller from "./views/scanlogin/shareCaller.vue";
+Vue.use(Router);
 
 export default new Router({
-  mode: 'history',
+  mode: "history",
   routes: [
     {
-      path: '/competition',
-      name: 'competition',
+      path: "/competition",
+      name: "competition",
       component: competition,
-      children: [
-        { path: 'join', component: join },
-      ]
+      children: [{ path: "join", component: join, meta: { title: "报名列表" } }]
     },
     {
-      path: '/about',
-      name: 'about',
+      path: "/about",
+      name: "about",
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+      component: () =>
+        import(/* webpackChunkName: "about" */ "./views/About.vue")
     },
     {
-      path:'/scanLogin',
-      name:'scanLogin',
-      component:scanLogin,
-      children:[
+      path: "/scanLogin",
+      name: "scanLogin",
+      component: scanLogin,
+      children: [
         {
-          path:'playerDetail',
-          component:resolve=>require(['./components/playerDetail.vue'],resolve)
+          //验证
+          path: "checkingCaller",
+          component: checkingCaller,
+          meta: {
+            title: "检录员验证"
+          }
         },
-        {   //��¼Ա��֤
-          path:'checkingCaller',component:checkingCaller
+        {
+          //开始扫码
+          path: "beginScan",
+          component: beginScan,
+          meta: {
+            title: "开始扫码"
+          }
         },
-        {   //��ʼɨ��
-          path:'beginScan',component:beginScan
+        {
+          //小组成员
+          path: "memberList",
+          component: memberList,
+          meta: {
+            title: "小组成员"
+          }
         },
-        {   //С���Ա
-          path:'memberList',component:memberList
+        {
+          path: "shareCaller",
+          component: shareCaller,
+          meta: {
+            title: "检录员邀请"
+          }
         }
       ]
     },
-    { path: '*', component: () => import('./views/NotFound.vue') }
+    { path: "*", component: () => import("./views/NotFound.vue") }
   ]
-})
+});

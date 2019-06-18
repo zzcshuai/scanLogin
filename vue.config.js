@@ -1,10 +1,10 @@
 module.exports = {
   // baseUrl: process.env.NODE_ENV === 'production'
-  publicPath: "/",
+  publicPath: '/',
+  
+  outputDir: 'dist',
 
-  outputDir: "dist",
-
-  assetsDir: "static",
+  assetsDir: 'static',
 
   filenameHashing: true,
 
@@ -14,17 +14,17 @@ module.exports = {
   pages: {
     index: {
       // entry for the pages
-      entry: "src/main.js",
+      entry: 'src/main.js',
       // the source template
-      template: "public/index.html",
+      template: 'public/index.html',
       // output as dist/index.html
-      filename: "index.html",
+      filename: 'index.html',
       // when using title option,
       // template title tag needs to be <title><%= htmlWebpackPlugin.options.title %></title>
       // title: '首页',
       // chunks to include on this pages, by default includes
       // extracted common chunks and vendor chunks.
-      chunks: ["chunk-vendors", "chunk-common", "index"]
+      chunks: ['chunk-vendors', 'chunk-common', 'index']
     }
     // when using the entry-only string format,
     // template is inferred to be `public/subpage.html`
@@ -79,8 +79,10 @@ module.exports = {
       css: {},
       postcss: {},
       stylus: {
-        "resolve url": true,
-        import: ["./src/theme"]
+        'resolve url': true,
+        'import': [
+          './src/theme'
+        ]
       }
     }
   },
@@ -103,28 +105,28 @@ module.exports = {
     hotOnly: false,
 
     proxy: {
-      "/apis": {
-        //将www.exaple.com印射为/apis
-        target: "http://dev-open.yunbisai.com", // 接口域名
-        secure: false, // 如果是https接口，需要配置这个参数
-        changeOrigin: true, //是否跨域
+      '/apis': {    //将www.exaple.com印射为/apis
+        target: 'http://dev-api.yunbisai.com',  // 接口域名
+        secure: false,  // 如果是https接口，需要配置这个参数
+        changeOrigin: true,  //是否跨域
         pathRewrite: {
-          "^/apis": ""
+            '^/apis': ''   
         }
-      }
+      }              
     },
 
-    before: app => {}
+    before: app => {
+    }
   },
   // 构建时开启多进程处理 babel 编译
-  parallel: require("os").cpus().length > 1,
+  parallel: require('os').cpus().length > 1,
 
   // https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-pwa
   pwa: {},
 
   // 第三方插件配置
   pluginOptions: {
-    "cube-ui": {
+    'cube-ui': {
       postCompile: true,
       theme: true
     }

@@ -1,7 +1,7 @@
 <template>
   <div id="playerdetail">
     <header>
-      <p><img src="../assets/img/avatar.jpg" alt=""></p>
+      <p><img :src="avatar" alt=""></p>
       <p>{{name}}</p>
     </header>
     <div id="content">
@@ -19,8 +19,15 @@
         </ul>
       </div>
     </div>
-    <footer @click='confirm()'>
-      <p>确定</p>
+    <footer>
+      <div class="model-btn">
+      <div class="cancel" @click="cancel()">
+        <p>取消</p>
+      </div>
+      <div class="confirm" @click="confirm()">
+        <p>确定</p>
+      </div>
+    </div>
     </footer>
   </div>
 </template>
@@ -30,11 +37,11 @@ export default {
   props:{
     groupCount:Number,
     allGroup:Array,
-    // avatar:{
-    //   type:String,
-    //   default:'../assets/img/success.png'
-    // },
-    name:String
+    name:String,
+    avatar:{
+      type:String,
+      default:'//g.yunbisai.com/img/cert/demo.png'
+    }
   },
   data(){
     return{
@@ -45,6 +52,10 @@ export default {
       let _this=this;
       _this.$emit('sfConfirm',false);
     },
+    cancel(){
+      let _this=this;
+      _this.$emit('sfCancel',false)
+    }
   },
 };
 </script>
@@ -164,20 +175,50 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
         }
       }
     }
+    // footer {
+    //   height: 13%;
+    //   border-top: 1px solid #cccccc;
+    //   // background: red;
+    //   border-top: 1px solid #e5e5e5;
+    //   margin: 0 20px;
+    //   display: flex;
+    //   flex-direction: row;
+    //   justify-content: center;
+    //   cursor: pointer;
+    //   p{
+    //     align-self: center;
+    //     color: #0099ff;
+    //   }
+    // }
     footer {
-      height: 13%;
-      border-top: 1px solid #cccccc;
-      // background: red;
-      border-top: 1px solid #e5e5e5;
-      margin: 0 20px;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      cursor: pointer;
-      p{
-        align-self: center;
-        color: #0099ff;
-      }
+    height: 13%;
+    border-top: 1px solid #cccccc;
+    .model-btn {
+        display: flex;
+        flex-direction: row;
+        font-size: 14px;
+        height: 100%;
+        color: #666666;
+        > div {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            p {
+                width: 100%;
+                text-align: center;
+                padding: 10px 0;
+            }
+        };
+        div:first-child p {
+            border-right: 1px solid #cccccc;
+        }
+        div:last-child p {
+            color: #0066CC;
+        }
     }
+}
   }
 </style>

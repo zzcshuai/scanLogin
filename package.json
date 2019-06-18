@@ -19,7 +19,9 @@
     "vue-amap": "^0.5.9",
     "vue-lazyload": "^1.2.6",
     "vue-router": "^3.0.3",
+    "vue-wechat-title": "^2.0.5",
     "vuex": "^3.0.1",
+    "vux": "^2.9.4",
     "weixin-js-sdk": "^1.4.0-test"
   },
   "devDependencies": {
