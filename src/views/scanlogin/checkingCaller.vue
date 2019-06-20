@@ -13,7 +13,7 @@
     <P class="title">检录员验证</p>
     <p class="tips">请确认填写信息与机构方所添加检录员信息一致</p>
     <ul class="formcheck">
-      <li><label for="username">姓<i class="nameLeft">名</i></label><input type="text" maxlength='6' placeholder="请输入姓名" v-model="txtUserName"></li>
+      <li><label for="username">姓<i class="nameLeft">名</i></label><input type="text"  placeholder="请输入姓名" v-model="txtUserName"></li>
       <li>
         <select name="" id="">
           <option value="1">+86</option>
@@ -142,11 +142,7 @@ export default {
         return true
       }
       if(isPhone){
-        const toast = this.$createToast({
-        txt: '请输入正确手机号',
-        type: 'error'
-      })
-      toast.show()
+          Toast.fail('手机格式有误')
       }
       return false;
     },
@@ -270,22 +266,22 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
                 font-size: 14px;
               }
               input::-webkit-input-placeholder {
-                padding-left: 50px;
+                padding-left: 40px;
                 font-size: 14px;
               }
               input:-moz-placeholder {
                 /* Mozilla Firefox 4 to 18 */
-                padding-left: 50px;
+                padding-left: 40px;
                 font-size: 14px;
               }
               input::-moz-placeholder {
                 /* Mozilla Firefox 19+ */
-                padding-left: 50px;
+                padding-left: 40px;
                 font-size: 14px;
               }
               :-ms-input-placeholder {
                 /* Internet Explorer 10-11 */
-                padding-left: 50px;
+                padding-left: 40px;
                 font-size: 14px;
               }
               select {
@@ -295,14 +291,17 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
                 border-color:transparent;
               }
             }
+            li select{
+              margin-left:10px;
+            }
             li:first-child input {
               margin-left: 10px;
             }
             li:last-child input::-webkit-input-placeholder {
-              // padding-left: 2.3rem;
+              padding-left: 45px;
             }
             li:last-child input {
-              margin-left: 4px;
+              margin-left: 8px;
             }
         }
         .btnlogin {

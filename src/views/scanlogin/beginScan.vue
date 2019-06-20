@@ -39,7 +39,7 @@
       </div>
       <footer>
         <div class="beginscan">
-          <button @click="beginScan()">开&nbsp;始&nbsp;扫&nbsp;码</button>
+          <button @click="beginScan()" :class='noScan==true?"":"noscan"'>开&nbsp;始&nbsp;扫&nbsp;码</button>
         </div>
         <div class="player" @click="toMemberList()">
           <div>
@@ -67,6 +67,7 @@
       :name="playerDetail.name"
       :groupCount="playerDetail.groupCount"
       :allGroup="allGroups"
+      :check='check'
       @sfConfirm="sfConfirm()"
       @sfCancel="sfCancel()"
     ></pDetail>
@@ -113,9 +114,12 @@ export default {
         groupCount: 0,
         selectGroupID: "",
         idcard: "",
-        idcardid:''
+        idcardid:'',
+        allgroup:[]
       },
-      selectGroupID: "" //选择的小组ID
+      check:'false',  //是否选中
+      selectGroupID: "", //选择的小组ID
+      noScan:true  //是否不能点击扫码按钮
     };
   },
   components: {
@@ -135,7 +139,7 @@ export default {
     if (event_id != "" && event_id != "") {
       _this.eventID = event_id;
     } 
-    _this.getCallerDetail();
+    _this.checkOpenIDStatus()
   },
   updated() {
     //删除小组名称最后的逗号
@@ -152,70 +156,6 @@ export default {
       lastGroup.innerText = lastGroups;
     }
   },
-  beforeRouteEnter(to, from, next) {
-    let _this = this;
-    next(_this => {
-      let openid = "";
-      let ssid = "";
-      //如果同时存在openid和ssid
-      console.log(_this.checkOpenid(), _this.checkSsid());
-      if (_this.checkOpenid() == true) {
-        ssid = getCookie("ssid");
-        _this.ssidGetOpenid(function(res) {
-          // console.log(getCookie('ssid'));
-          if (res.error == 0) {
-            setCookie("openid", res.datArr);
-          } else if(res.error==3){
-            delCookie("ssid");
-            window.location.reload();
-            _this.openidGetSsid((res)=>{
-              if(res.error==0){
-                setCookie("ssid", res.ssid);
-              }else{
-                Toast.fail(res.msg)
-              }
-            })
-          }else if(res.error==2){
-            Toast.fail(res.msg)
-          }
-        }, ssid);
-        return;
-      }
-      // 如果openid和ssid都不存在
-      if (_this.checkOpenid() == false && _this.checkSsid() == false) {
-        _this.getOpenID();
-        return;
-      }
-      //如果openid不存在，ssid都存在
-      if (_this.checkOpenid() == false && _this.checkSsid() == true) {
-        openid = getCookie("openid");
-        _this.openidGetSsid(function(res) {
-          if (res.error == 0) {
-            setCookie("ssid", res.ssid);
-          } else {
-            _this.getOpenID();
-          }
-        }, openid);
-        return;
-      }
-      //如果openid存在，ssid不存在
-    //   if (_this.checkOpenid() == true && _this.checkSsid() == false) {
-    //     openid = getCookie("openid");
-    //     console.log(openid);
-    //     _this.openidGetSsid(function(res) {
-    //       if (res.error == 0) {
-    //         console.log(res.ssid);
-    //         setCookie("ssid", res.ssid);
-    //       } else {
-    //         Toast.fail(res.msg);
-    //         delCookie("ssid");
-    //         // window.location.reload();
-    //       }
-    //     }, openid);
-    //     return;
-    //   }
-    // });
-  },
   computed: {
     allGroups: function() {
       let _this = this;
@@ -223,6 +163,49 @@ export default {
     }
   },
   methods: {
+    checkOpenIDStatus (){
+    let _this = this;
+      let openid = "";
+      let ssid = "";
+
+       //如果同时存在openid和ssid
+      if (_this.checkOpenid() == true) {
+        openid = getCookie("openid");
+        _this.openidGetSsid(function(res) {
+          // console.log(getCookie('ssid'));
+          if (res.error == 0) {
+            _this.callerDetail.name = res.datArr.name;
+            _this.callerDetail.title = res.datArr.lswlevent__title;
+            _this.callerGroup = res.test;
+            _this.noScan=true;
+            setCookie("ssid", res.ssid);
+          } else{
+            _this.noScan=false;
+            Toast.fail(res.msg)
+          }
+        }, openid);
+      }
+      //  // 如果openid和ssid都不存在
+      else if (_this.checkOpenid() == false && _this.checkSsid() == false) {
+        _this.getOpenID();
+      }
+      // 如果openid不存在，ssid都存在
+      else if (_this.checkOpenid() == false && _this.checkSsid() == true) {
+        ssid = getCookie("ssid");
+        _this.ssidGetOpenid(function(res) {
+          if (res.error == 0) {
+            setCookie("ssid", res.datArr);
+            _this.getCallerDetail();
+          } else if(res.error==2){
+            _this.getOpenID();
+          }else if(res.error==3){
+            Toast.fail(res.msg)
+            _this.noScan=false;
+          }
+        }, ssid);
+      }
+
+  },
     //获取url参数
     getUrlKey(name) {
       return (
@@ -270,11 +253,22 @@ export default {
               let openid = res.data.datArr.openid;
               setCookie("openid", openid);
               _this.openidGetSsid(function(res) {
-                setCookie("ssid", res.ssid);
+                if(res.error==0){
+                  _this.callerDetail.name = res.datArr.name;
+                  _this.callerDetail.title = res.datArr.lswlevent__title;
+                  _this.callerGroup = res.test;
+                  setCookie("ssid", res.ssid);
+                  _this.noScan=true;
+                }else if(res.error==2){
+                  _this.noScan=false;
+                  Toast.fail(res.msg)
+                }else if(res.error==1){
+                  _this.noScan=false;
+                }
               }, openid);
               window.location.replace(
                 "/scanLogin/beginscan?event_id=" + _this.eventID
-              );
+              ); 
             } else {
               // Toast.fail(res.data.msg);
               window.location.replace(
@@ -302,7 +296,7 @@ export default {
       return array.sort(function(a, b) {
         var x = a[key];
         var y = b[key];
-        return y < x ? -1 : x > y ? 1 : 0;
+        return y > x ? -1 : x < y ? 1 : 0;
       });
     },
     checkOpenid(isOpenid) {
@@ -358,9 +352,13 @@ export default {
     },
     beginScan() {
       let _this = this;
+      if(_this.noScan==false){
+        return false;
+      }
       let data={
         url:location.href
       }
+      _this.check=''
       getWXconfig(data).then(res => {
         let Data = res.data;
         wx.config({
@@ -392,33 +390,7 @@ export default {
                       _this.book_no = cutUrl[cutUrl.length - 1];
                     }
                     //验证选手信息
-                    _this.checkPlayer(
-                      res => {
-                        if (res.error == 0) {
-                          _this.isShowPDetail = true;
-                          _this.isShowOverlay = true;
-                          // _this.playerDetail.avatar=res.test.idcard_img;
-                          // _this.playerDetail.avatar='../../assets/img/success.png'
-                          _this.playerDetail.name = res.test.idcardname;
-                          res.datArr.map((item, index) => {
-                            // _this.playerDetail.allGroup.push(item);
-                            return res.datArr;
-                          });
-                          _this.playerDetail.allGroup = res.datArr;
-                          _this.playerDetail.groupCount = res.datArr.length;
-                          _this.playerDetail.idcard = res.test.idcard;
-                          _this.playerDetail.idcardname = res.test.idcardname;
-                          _this.playerDetail.idcardid=res.test.idcardid
-                        } else {
-                          Toast.fail(res.msg);
-                        }
-                      },
-                      {
-                        book_no: _this.book_no,
-                        ssid: getCookie('ssid'),
-                        event_id: _this.eventID
-                      }
-                    );
+                    _this.getMemberDetail();
                 }
               });
             } else {
@@ -432,13 +404,18 @@ export default {
     getCallerDetail() {
       let _this = this;
       _this.openidGetSsid(function(res) {
-        if (res.error == 0) {
-          _this.callerDetail.name = res.datArr.name;
-          _this.callerDetail.title = res.datArr.lswlevent__title;
-          _this.callerGroup = res.test;
-        } else {
-          Toast.fail(res.msg);
-        }
+        if(res.error==0){
+            _this.callerDetail.name = res.datArr.name;
+            _this.callerDetail.title = res.datArr.lswlevent__title;
+            _this.callerGroup = res.test;
+            setCookie("ssid", res.ssid);
+            _this.noScan=true;
+          }else if(res.error==2){
+            Toast.fail(res.msg)
+            _this.noScan=false;
+          }else if(res.error==1){
+            _this.noScan=false;
+          }
       }, getCookie("openid"));
     },
     toMemberList() {
@@ -452,6 +429,34 @@ export default {
         _this.$router.push("/scanLogin/memberList?event_id=" + event_id);
       }
     },
+    //返回检录的选手信息
+    getMemberDetail(){
+      let _this=this;
+      _this.checkPlayer(
+        res => {
+          console.log(res)
+          if (res.error == 0) {
+            _this.isShowPDetail = true;
+            _this.isShowOverlay = true;
+            _this.playerDetail.avatar=res.test.idcard_img;
+            _this.playerDetail.name = res.test.idcardname;
+            _this.playerDetail.allGroup=res.datArr;
+            _this.playerDetail.groupCount = res.datArr.length;
+            _this.playerDetail.idcard = res.test.idcard;
+            _this.playerDetail.idcardname = res.test.idcardname;
+            _this.playerDetail.idcardid=res.test.useridcardid
+          } else {
+            Toast.fail(res.msg);
+          }
+        },
+        {
+          book_no: _this.book_no,
+          ssid: getCookie('ssid'),
+          event_id: _this.eventID
+        }
+      );
+    },
+    //去选手列表
     cancel() {
       let _this = this;
       let event_id = _this.eventID;
@@ -464,10 +469,12 @@ export default {
           event_id
       );
     },
+    //继续扫码
     confirm() {
       let _this = this;
       _this.isShowOverlay = false;
       _this.isShowPopups = false;
+      _this.check=''
       _this.beginscan();
     },
     sfConfirm() {
@@ -476,9 +483,12 @@ export default {
       let selectGroupID = "";
       let selectGroupName = "";
       // _this.beginscan=null;
+      _this.check=''
       var id = document.getElementsByName("groupname");
       for (var i = 0; i < id.length; i++) {
-        if (id[i].checked) selectGroupID = id[i].value;
+        if (id[i].checked){ 
+          selectGroupID = id[i].value;
+        }
       }
       _this.playerDetail.allGroup.map((item, index) => {
         if (item.groupid == selectGroupID) {
@@ -486,7 +496,7 @@ export default {
         }
       });
       _this.selectGroupID = selectGroupID;
-      // console.log(selectGroupName)
+      console.log(selectGroupName,selectGroupID)
       if (selectGroupID == "") {
         Toast("请选择小组");
         return;
@@ -515,7 +525,7 @@ export default {
           ssid: ssid,
           event_id: _this.eventID,
           group_id: selectGroupID,
-          idcardid: _this.playerDetail.useridcardid,
+          idcardid: _this.playerDetail.idcardid,
           idcard: _this.playerDetail.idcard,
           idcardname: _this.playerDetail.idcardname,
           groupname: selectGroupName
@@ -526,6 +536,7 @@ export default {
       let _this = this;
       _this.isShowPDetail = false;
       _this.isShowOverlay = false;
+      _this.check='';
     }
   }
 };
@@ -682,6 +693,10 @@ button {
         background: linear-gradient(to right, #0066cc, #0099ff);
         box-shadow: 0px 5px 10px #0099ff;
         font-weight: bold;
+      }
+      .noscan{
+        background:gray;
+        box-shadow:none;
       }
     }
     .player {

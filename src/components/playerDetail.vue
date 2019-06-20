@@ -1,7 +1,7 @@
 <template>
   <div id="playerdetail">
     <header>
-      <p><img :src="avatar" alt=""></p>
+      <p><img :src="imgurl+avatar" alt="avatar" onerror="javascript:this.src='//g.yunbisai.com/img/cert/demo.png';"></p>
       <p>{{name}}</p>
     </header>
     <div id="content">
@@ -12,7 +12,8 @@
         <ul>
           <li v-for="(item,index) in allGroup" :key="index" :class="(item.is_check==0)?'gray':''">
             <p>{{item.groupname}}</p>
-            <p><label><input type="radio" :value='item.groupid' :disabled='(item.is_check==0)?true:false' name='groupname'>
+            <p><label><input type="radio" :value='item.groupid' :disabled='(item.is_check==0)?true:false' name='groupname' 
+              v-model='check'>
               <span class="radio-style"></span>
             </label></p>
           </li>
@@ -38,14 +39,16 @@ export default {
     groupCount:Number,
     allGroup:Array,
     name:String,
-    avatar:{
-      type:String,
-      default:'//g.yunbisai.com/img/cert/demo.png'
-    }
+    avatar:String,
+    check:String,
   },
   data(){
     return{
+      imgurl:'//g.yunbisai.com/',
     };
+  },
+  created(){
+    // _this.avatar
   },
   methods:{
     confirm(){

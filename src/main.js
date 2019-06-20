@@ -18,10 +18,6 @@ fastClick.attach(document.body);
 //添加动态组件标题
 Vue.use(vueWechatTitle)
 
-//图片懒加载
-Vue.use(VueLazyLoad,{
-    error:'//g.yunbisai.com/img/cert/demo.png',
-})
 
 Vue.config.productionTip = false
 // Vue.prototype.$ajax = axios

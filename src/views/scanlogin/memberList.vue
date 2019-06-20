@@ -1,16 +1,15 @@
 <template>
-  <div id="root">
+  <div id="memberlist">
     <header>
-      <div class="back" onclick="javascript:history.back(-1)">
-        <i class="cubeic-back"></i>
-        <span class="backtip">退出</span>
+      <div class="head">
+        <div class="back" onclick="javascript:history.back(-1)">
+          <i class="cubeic-back"></i>
+          <span class="backtip">退出</span>
+        </div>
+        <div class="title">
+          <span>{{groupTitle}}</span>
+        </div>
       </div>
-      <div class="title">
-        <span>{{groupTitle}}</span>
-      </div>
-    </header>
-    <div class="content">
-      <!-- <div> -->
       <ul class="member-total">
         <li @click="noFilter()">
           共:
@@ -25,11 +24,14 @@
           <span>{{noEnter}}</span>人
         </li>
       </ul>
+    </header>
+    <div class="content">
+      <!-- <div> -->
       <ul class="member-list" v-show="pDetail.length>0">
         <li v-for="(item,index) in pDetail" :key="index">
           <div>
             <div>
-              <img v-lazy="item.useridcard__idcard_img" alt="avatar">
+              <img :src="imgurl+item.useridcard__idcard_img" alt="avatar" onerror="javascript:this.src='//g.yunbisai.com/img/cert/demo.png';">
             </div>
             <div>
               <ul class="member-detailed">
@@ -64,6 +66,7 @@ export default {
   name: "memberList",
   data() {
     return {
+      imgurl:'//g.yunbisai.com/',
       memberSum: "", //总量
       entered: "", //已检录
       noEnter: "", //未检录
@@ -271,7 +274,7 @@ export default {
 </script>
 
 <style lang='less' scoped>
-#root {
+#memberlist {
   width: 100%;
   overflow: hidden;
   height: 100%;
@@ -279,15 +282,17 @@ export default {
   flex-direction: column;
   background: #ffffff;
   header {
-    height: 36px;
-    background: #ffffff;
-    color: #111111;
-    /*border-bottom: 1px solid #e5e5e5;*/
-    font-size: 16px;
-    width: 100%;
-    line-height: 36px;
-    display: flex;
-    flex-direction: row;
+    .head{
+      height: 36px;
+      background: #ffffff;
+      color: #111111;
+      /*border-bottom: 1px solid #e5e5e5;*/
+      font-size: 16px;
+      width: 100%;
+      line-height: 36px;
+      display: flex;
+      flex-direction: row;
+    }
     .back {
       font-size: 14px;
       color: #24262a;
@@ -304,10 +309,6 @@ export default {
       font-size: 12px;
       margin-right: 5px;
     }
-  }
-  .content {
-    flex: 1;
-     margin-top:30px;
     .member-total {
       margin: 1px -5px 0;
       padding-bottom: 10px;
@@ -322,12 +323,15 @@ export default {
         }
       }
     }
+  }
+  .content {
+    margin-bottom: 50px;
+    flex: 1;
+    overflow-y:auto; 
+    -webkit-overflow-scrolling:touch;
     .member-list {
       margin: 0 10px;
-      overflow-y: auto;
-      max-height: 540px;
        /*解决ios上滑动不流畅*/
-
       -webkit-overflow-scrolling: touch;
       > li {
         margin: 10px 0;
@@ -357,6 +361,9 @@ export default {
     .member-list::-webkit-scrollbar {
       display: none;
     }
+    .member-list::scrollbar {
+      display: none;
+    }
     .member-detailed {
       > li {
         height: 70px;
@@ -374,6 +381,9 @@ export default {
         }
       }
     }
+  }
+  .content::-webkit-scrollbar {
+      display: none;/*隐藏滚轮*/
   }
   .selectgroup {
     position: fixed;
