@@ -3,17 +3,13 @@ import './plugins/axios'
 import './cube-ui'
 import App from './App.vue'
 import router from './router'
-import store from './store'
-import fastClick from 'fastclick';   
+import store from './store' 
 import 'amfe-flexible'
 import Vant from 'vant';
 import 'vant/lib/index.css';
-import VueLazyLoad from 'vue-lazyload'
 import vueWechatTitle from 'vue-wechat-title'
 // import VueAMap from 'vue-amap';
 
-//解决移动端点击300ms延迟
-fastClick.attach(document.body);
 
 //添加动态组件标题
 Vue.use(vueWechatTitle)

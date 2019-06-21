@@ -1,12 +1,12 @@
 <template>
-  <div id="root">
+  <div id="beginscan">
     <div class="overlay" v-show="isShowOverlay"></div>
     <div class="main">
       <header>
-        <router-link to="/scanLogin/checkingCaller" tag="div" class="back">
+        <div class="back" onclick="javascript:history.go(-1);">
           <i class="cubeic-back"></i>
           <span class="backtip">退出</span>
-        </router-link>
+        </div>
         <div class="title">
           <span>扫码录入</span>
         </div>
@@ -160,6 +160,17 @@ export default {
     allGroups: function() {
       let _this = this;
       return _this.sortIsCheck(_this.playerDetail.allGroup, "is_check");
+    }
+  },
+  beforeRouteEnter (to, from, next) {
+    var u = navigator.userAgent;
+    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+    // XXX: 修复iOS版微信HTML5 History兼容性问题
+    if (isiOS && to.path !== location.pathname) {
+      // 此处不可使用location.replace
+      location.assign(to.fullPath)
+    } else {
+      next()
     }
   },
   methods: {
@@ -355,9 +366,7 @@ export default {
       if(_this.noScan==false){
         return false;
       }
-      let data={
-        url:location.href
-      }
+      let data=location.href
       _this.check=''
       getWXconfig(data).then(res => {
         let Data = res.data;
@@ -591,7 +600,7 @@ input {
 button {
   cursor: pointer;
 }
-#root {
+#beginscan {
   width: 100%;
   height: 100%;
   input {
@@ -621,6 +630,7 @@ button {
     .back {
       font-size: 14px;
       color: #24262a;
+      margin-left:6px;
     }
     .title {
       display: inline-block;
@@ -639,7 +649,7 @@ button {
     flex: 1;
     background: #ffffff;
     .userMsg {
-      font-size: 14px;
+      font-size: 15px;
       margin: 20px 15px 0 15px;
       li {
         margin-top: 10px;

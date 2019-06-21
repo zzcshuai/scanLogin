@@ -1,7 +1,7 @@
 <template>
-<div id="root">
+<div id="checkingcaller">
   <header>
-    <div class="back" onClick="javascript :history.back(-1);">
+    <div class="back" onclick="javascript:history.go(-1);">
       <i class="cubeic-back"></i>
       <span class="backtip">退出</span>
     </div>
@@ -207,7 +207,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
   button{
     cursor: pointer;
   }
-#root {
+#checkingcaller {
     display: flex;
     flex-direction: column;
     background: #ffffff;
@@ -224,6 +224,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
         flex-direction: row;
         .back {
             font-size: 14px;
+            margin-left:6px;
         }
         .title{
           width: 75%;

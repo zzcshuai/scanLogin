@@ -2,7 +2,7 @@
   <div id="memberlist">
     <header>
       <div class="head">
-        <div class="back" onclick="javascript:history.back(-1)">
+        <div class="back" onclick="javascript:history.go(-1)">
           <i class="cubeic-back"></i>
           <span class="backtip">退出</span>
         </div>
@@ -296,6 +296,7 @@ export default {
     .back {
       font-size: 14px;
       color: #24262a;
+      margin-left:6px;
     }
     .title {
       display: inline-block;
