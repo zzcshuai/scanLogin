@@ -93,7 +93,8 @@ export default {
       _this.event_id = _this.$route.query.event_id;
       _this.isGroupID = true;
       _this.groupIDGetList();
-    }
+    };
+    // _this.automaticallyAdjustsScrollViewInsets = NO;
     //获取所有小组名称
     _this.eventIDGetPlay(res => {
       if (res.error == 0) {
@@ -274,6 +275,13 @@ export default {
 </script>
 
 <style lang='less' scoped>
+html,body{
+  width:100%;
+  height: 100%;
+  margin:0;
+  padding:0;
+  position:relative;
+}
 #memberlist {
   width: 100%;
   overflow: hidden;

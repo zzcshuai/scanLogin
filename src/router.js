@@ -60,11 +60,11 @@ export default new Router({
           path: "shareCaller",
           component: shareCaller,
           meta: {
-            title: "检录员邀请"
+            title: "检录员邀请",
           }
         }
       ]
     },
     { path: "*", component: () => import("./views/NotFound.vue") }
-  ]
+  ],
 });

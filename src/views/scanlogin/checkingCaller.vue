@@ -1,23 +1,12 @@
 <template>
 <div id="checkingcaller">
-  <header>
-    <div class="back" onclick="javascript:history.go(-1);">
-      <i class="cubeic-back"></i>
-      <span class="backtip">退出</span>
-    </div>
-    <div class="title">
-      <span>验证</span>
-    </div>
-  </header>
   <div class="content">
     <P class="title">检录员验证</p>
     <p class="tips">请确认填写信息与机构方所添加检录员信息一致</p>
     <ul class="formcheck">
       <li><label for="username">姓<i class="nameLeft">名</i></label><input type="text"  placeholder="请输入姓名" v-model="txtUserName"></li>
       <li>
-        <select name="" id="">
-          <option value="1">+86</option>
-        </select>
+        <span class='phoneTips'>+86</span>
         <input type="tel" placeholder="请输入手机号码" maxlength="11" v-model='txtPhone'></li>
     </ul>
     <div class="btnlogin">
@@ -50,7 +39,8 @@ export default {
     let eventID=_this.$route.query.event_id;
     if(eventID!=null&&eventID!=''){
       _this.event_id=eventID;
-    }
+    };
+    _this.automaticallyAdjustsScrollViewInsets = NO;
   },
   beforeRouteEnter(to, from, next) {
     next(_this=>{
@@ -174,7 +164,8 @@ export default {
         }
         checkSubmit(data).then((res)=>{
           if(res.data.error==0){
-              _this.$router.push('/scanLogin/beginScan?event_id='+_this.event_id);
+              // _this.$router.push('/scanLogin/beginScan?event_id='+_this.event_id);
+              window.location.href='https://m.yunbisai.com/scanLogin/beginScan?event_id='+_this.event_id;
               setCookie('ssid',res.data.test)
             }else{
               Toast.fail(res.data.msg)
@@ -188,9 +179,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, li, a, p, h1, h2, h3, h4,h5, h6, i, b, textarea, button, input, select, figure, figcaption {
-      padding: 0;
-      margin: 0;
+html,body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, li, a, p, h1, h2, h3, h4,h5, h6, i, b, textarea, button, input, select, figure, figcaption {
       list-style: none;
       text-decoration: none;
       border: none;
@@ -217,28 +206,15 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
         background: #ffffff;
         color: #111111;
         border-bottom: 1px solid #cccccc;
-        font-size: 16px;
         width: 100%;
         line-height: 36px;
         display: flex;
         flex-direction: row;
-        .back {
-            font-size: 14px;
-            margin-left:6px;
-        }
-        .title{
-          width: 75%;
-          text-align: center;
-        }
-        .cubeic-back::before{
-          content: "\E608";
-          margin-left: 2px;
-          font-size: 14px;
-          margin-right: 5px;
-        }
+        text-align:center;
     }
     .content {
         flex: 1;
+        font-size: 16px;
         .title {
             margin: 80px 40px 0;
             font-size: 18px;
@@ -247,13 +223,13 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
         };
         .tips {
             margin: 20px 0 0 40px;
-            font-size: 12px;
+            font-size: 15px;
         };
         > .formcheck {
             // width: 100%;
             margin-top: 80px;
             padding: 0 40px;
-            font-size: 14px;
+            font-size: 16px;
             color: #333333;
             li {
               margin-top: 15px;
@@ -264,32 +240,29 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
               }
               input {
                 margin-left: 0;
-                font-size: 14px;
+                font-size: 16px;
               }
               input::-webkit-input-placeholder {
                 padding-left: 40px;
-                font-size: 14px;
+                font-size: 16px;
               }
               input:-moz-placeholder {
                 /* Mozilla Firefox 4 to 18 */
                 padding-left: 40px;
-                font-size: 14px;
+                font-size: 16px;
               }
               input::-moz-placeholder {
                 /* Mozilla Firefox 19+ */
                 padding-left: 40px;
-                font-size: 14px;
+                font-size: 16px;
               }
               :-ms-input-placeholder {
                 /* Internet Explorer 10-11 */
                 padding-left: 40px;
-                font-size: 14px;
+                font-size: 16px;
               }
-              select {
-                font-size: 14px;
-                -webkit-appearance:none;
-                background-color:transparent; 
-                border-color:transparent;
+              .phoneTips{
+                margin-left:11px;
               }
             }
             li select{

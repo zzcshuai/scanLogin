@@ -102,7 +102,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
         font-weight: bold;
     }
     .model-tips {
-        font-size: 14px;
+        font-size: 16px;
         margin-top: 15px;
         color: #666666;
     }
@@ -113,7 +113,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
     .model-btn {
         display: flex;
         flex-direction: row;
-        font-size: 14px;
+        font-size: 16px;
         height: 100%;
         color: #666666;
         > div {

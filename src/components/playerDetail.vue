@@ -89,7 +89,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
     display: flex;
     flex-direction: column;
     background: #ffffff;
-    font-size: 14px;
+    font-size: 16px;
     header{
       display: flex;
       flex-direction: column;
@@ -124,6 +124,7 @@ body, div, span, header, footer, nav, section, aside, article, ul, dl, dt, dd, l
       }
       .tips{
         color: #0099ff;
+        font-size: 14px;
         p{
           line-height: 16px;
         }

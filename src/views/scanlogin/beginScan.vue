@@ -3,13 +3,6 @@
     <div class="overlay" v-show="isShowOverlay"></div>
     <div class="main">
       <header>
-        <div class="back" onclick="javascript:history.go(-1);">
-          <i class="cubeic-back"></i>
-          <span class="backtip">退出</span>
-        </div>
-        <div class="title">
-          <span>扫码录入</span>
-        </div>
       </header>
       <div class="content">
         <ul class="userMsg">
@@ -88,6 +81,7 @@ import {
   codeGetOpenid
 } from "../../common/api";
 import { Toast } from "vant";
+// import {getWXconfig} from '../../common/getIosUrl.js'
 export default {
   name: "beginScan",
   data() {
@@ -119,7 +113,7 @@ export default {
       },
       check:'false',  //是否选中
       selectGroupID: "", //选择的小组ID
-      noScan:true  //是否不能点击扫码按钮
+      noScan:true,  //是否不能点击扫码按钮
     };
   },
   components: {
@@ -160,17 +154,6 @@ export default {
     allGroups: function() {
       let _this = this;
       return _this.sortIsCheck(_this.playerDetail.allGroup, "is_check");
-    }
-  },
-  beforeRouteEnter (to, from, next) {
-    var u = navigator.userAgent;
-    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
-    // XXX: 修复iOS版微信HTML5 History兼容性问题
-    if (isiOS && to.path !== location.pathname) {
-      // 此处不可使用location.replace
-      location.assign(to.fullPath)
-    } else {
-      next()
     }
   },
   methods: {
@@ -366,7 +349,15 @@ export default {
       if(_this.noScan==false){
         return false;
       }
-      let data=location.href
+      var u = navigator.userAgent;
+      var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
+      var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+      let data={};
+      let url='';
+      url=window.location.href
+      data={
+        url:url.split("#")[0]
+      }
       _this.check=''
       getWXconfig(data).then(res => {
         let Data = res.data;
@@ -578,12 +569,10 @@ i,
 b,
 textarea,
 button,
-input,
+input, 
 select,
 figure,
 figcaption {
-  padding: 0;
-  margin: 0;
   list-style: none;
   text-decoration: none;
   border: none;
@@ -618,41 +607,23 @@ button {
     height: 100%;
   }
   header {
-    height: 36px;
+    height: 20px;
     background: #ffffff;
     color: #111111;
-    border-bottom: 1px solid #e5e5e5;
     font-size: 16px;
     width: 100%;
     line-height: 36px;
     display: flex;
     flex-direction: row;
-    .back {
-      font-size: 14px;
-      color: #24262a;
-      margin-left:6px;
-    }
-    .title {
-      display: inline-block;
-      width: 75%;
-      color: #24262a 100%;
-      text-align: center;
-    }
-    .cubeic-back::before {
-      content: "\E608";
-      margin-left: 2px;
-      font-size: 14px;
-      margin-right: 5px;
-    }
   }
   .content {
     flex: 1;
     background: #ffffff;
     .userMsg {
-      font-size: 15px;
+      font-size: 16px;
       margin: 20px 15px 0 15px;
       li {
-        margin-top: 10px;
+        margin-top: 15px;
         color: #333333;
         display: flex;
         flex-direction: row;
@@ -667,11 +638,13 @@ button {
           margin-right: 0;
         }
         p:first-child {
-          width: 25%;
+          width: 30%;
+          color:#999999;
+          line-height:20px;
         }
         p:last-child {
           margin-left: -12px;
-          margin-top: -3px;
+          // margin-top: -3px;
           line-height: 20px;
         }
         p {
@@ -696,12 +669,12 @@ button {
       justify-content: center;
       > button {
         color: #ffffff;
-        font-size: 15px;
+        font-size: 16px;
         width: 100px;
         height: 100px;
         border-radius: 50%;
         background: linear-gradient(to right, #0066cc, #0099ff);
-        box-shadow: 0px 5px 10px #0099ff;
+        box-shadow: 0 8px 18px #96d6ff;
         font-weight: bold;
       }
       .noscan{
@@ -721,7 +694,7 @@ button {
         justify-content: space-around;
         height: 100%;
         align-items: center;
-        font-size: 14px;
+        font-size: 16px;
         img {
           width: 20px;
           height: 20px;

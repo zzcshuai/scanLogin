@@ -25,7 +25,6 @@ Vue.config.productionTip = false
 //   plugin: ['AMap.Geolocation'],
 //   v: '1.4.6'
 // });
-
 new Vue({
   router,
   store,
